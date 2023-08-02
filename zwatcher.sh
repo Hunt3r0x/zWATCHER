@@ -95,6 +95,11 @@ while [[ $# -gt 0 ]]; do
         -n) notifyid="$2"; shift ;;
         -o)
             outputfile="$2"
+            if [ -z "$outputfile" ]; then
+                echo -e "${RED}Output file not specified.${RESET}" >&2
+                displayusage
+                exit 1
+            fi
             outputfile_valid="true"
             if [ ! -w "$(dirname "$outputfile")" ]; then
                 echo -e "${RED}Cannot write to the specified output file path: $outputfile${RESET}" >&2
@@ -121,13 +126,13 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-displaybanner
+# if [ "$outputfile_valid" == "false" ]; then
+#     echo -e "${RED}Output file not specified.${RESET}" >&2
+#     displayusage
+#     exit 1
+# fi
 
-if [ "$outputfile_valid" = "false" ]; then
-    echo -e "${RED}Missing or invalid output file path.${RESET}" >&2
-    displayusage
-    exit 1
-fi
+displaybanner
 
 if [ -n "$LIST_FILE" ]; then
     scanfordomainslist
