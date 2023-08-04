@@ -43,11 +43,11 @@ runhttpx() {
         httpx -silent -sc -cl -title -u "$DOMAIN" | tee "$outputfile"
         echo -e "${GREEN}FIRST SCAN COMPLETED & SAVED >> $outputfile${RESET}"
     fi
-    httpx -silent -sc -cl -title -u "$DOMAIN" > ".tmp-${outputfile}"
+    httpx -silent -sc -cl -title -u "$DOMAIN" > "$(dirname $outputfile)/.tmp-$(basename $outputfile)"
 }
 
 comparescans() {
-    diffoutput=$(cat ".tmp-${outputfile}" | anew "$outputfile")
+    diffoutput=$(cat "$(dirname $outputfile)/.tmp-$(basename $outputfile)" | anew "$outputfile")
     
     if [ -z "$diffoutput" ]; then
         echo -e "${YELLOW}NOTHING NEW FOUND ${RESET}"
