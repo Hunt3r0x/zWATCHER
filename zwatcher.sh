@@ -54,11 +54,12 @@ comparescans() {
         echo -e "${YELLOW}NOTHING NEW FOUND ${RESET}"
         echo -e "${CYAN}SLEEPING FOR : $SLEEP_INTERVAL SECONDS${RESET}"
     else
-        echo -e "${CYAN}NEW CHANGES FOUND :${RESET}"
+        echo -e "${CYAN}NEW CHANGES FOUND...${RESET}"
         echo -e "${RED}$PLUS${RESET}"
         echo -e "${CYAN}$diffoutput${RESET}"
         echo -e "${RED}$PLUS${RESET}"
         echo -e "${CYAN}zwatcher found: $diffoutput${RESET}" | notify -id "$notifyid" > /dev/null 2>&1
+        echo -e "${CYAN}SLEEPING FOR : $SLEEP_INTERVAL SECONDS${RESET}"
     fi
 }
 
