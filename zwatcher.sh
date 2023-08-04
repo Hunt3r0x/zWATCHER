@@ -1,14 +1,14 @@
 #!/bin/bash
 
 outputfile="zwatcheroutput.txt"
-tmpoutput=".tmpzwatcheroutput.txt"
+tmpoutput=".tmp-$outputfile"
 
 RESET="\e[0m"
 GREEN="\e[1;32m"
 RED="\e[1;31m"
 YELLOW="\e[1;33m"
 CYAN="\e[1;36m"
-
+PLUS="++++++++"
 displaybanner() {
     echo -e "${GREEN}"
 cat << "BANNER"
@@ -17,7 +17,7 @@ cat << "BANNER"
   ███╔╝ ██║ █╗ ██║   ██║   ██║     ███████║██████╔╝
  ███╔╝  ██║███╗██║   ██║   ██║     ██╔══██║██╔══██╗
 ███████╗╚███╔███╔╝   ██║   ╚██████╗██║  ██║██║  ██║
-╚══════╝ ╚══╝╚══╝    ╚═╝    ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ v1.2
+╚══════╝ ╚══╝╚══╝    ╚═╝    ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ v1.3
                        BY H1NTR0X01 @71ntr
   Security is a myth. Hacking is not.
 BANNER
@@ -33,16 +33,16 @@ displayusage() {
     echo -e "  -n <notify-id>               Specify the notification ID"
     echo -e "  -o <output file>             Specify the output file to save scan results"
     echo -e "  -h                           Display this help message"
-    echo -e "\n${RED}./zwatcher.sh -u example.com -s 60 -o scanresults.txt -n notifyid"
+    echo -e "\n${RED} ./zwatcher.sh -u example.com -s 60 -n notifyid -o scanresults.txt"
 }
 
 runhttpx() {
     if [ -e "$outputfile" ]; then
-        echo -e "${GREEN}Scanning existing targets.${RESET}"
+        echo -e "${GREEN}STARTING SCAN...${RESET}"
     else
-        echo -e "${RED} Creating $outputfile.${RESET}"
+        echo -e "${RED}  CREATING : $outputfile${RESET}"
         httpx -silent -sc -cl -title -u "$DOMAIN" | tee "$outputfile"
-        echo -e "${GREEN}First scan completed & saved to $outputfile${RESET}"
+        echo -e "${GREEN}FIRST SCAN COMPLETED & SAVED >> $outputfile${RESET}"
     fi
     httpx -silent -sc -cl -title -u "$DOMAIN" > "$tmpoutput"
 }
@@ -51,11 +51,13 @@ comparescans() {
     diffoutput=$(cat "$tmpoutput" | anew "$outputfile")
     
     if [ -z "$diffoutput" ]; then
-        echo -e "${YELLOW}Nothing new found.${RESET}"
-        echo -e "${CYAN}Sleeping for $SLEEP_INTERVAL seconds.${RESET}"
+        echo -e "${YELLOW}NOTHING NEW FOUND ${RESET}"
+        echo -e "${CYAN}SLEEPING FOR : $SLEEP_INTERVAL SECONDS${RESET}"
     else
-        echo -e "${CYAN}New targets found:${RESET}"
+        echo -e "${CYAN}NEW CHANGES FOUND :${RESET}"
+        echo -e "${RED}$PLUS${RESET}"
         echo -e "${CYAN}$diffoutput${RESET}"
+        echo -e "${RED}$PLUS${RESET}"
         echo -e "${CYAN}zwatcher found: $diffoutput${RESET}" | notify -id "$notifyid" > /dev/null 2>&1
     fi
 }
@@ -63,7 +65,7 @@ comparescans() {
 scanfordomainslist() {
     while read -r domain; do
         DOMAIN="$domain"
-        runhttpx
+        # runhttpx
         while true; do
             runhttpx
             comparescans
@@ -133,6 +135,12 @@ done
 # fi
 
 displaybanner
+
+# if [ "$outputfile_valid" = "false" ]; then
+#     echo -e "${RED}Missing or invalid output file path.${RESET}" >&2
+#     displayusage
+#     exit 1
+# fi
 
 if [ -n "$LIST_FILE" ]; then
     scanfordomainslist
