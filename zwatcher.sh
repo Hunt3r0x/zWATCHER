@@ -1,7 +1,6 @@
 #!/bin/bash
 
 outputfile="zwatcheroutput.txt"
-tmpoutput=".tmp-$outputfile"
 
 RESET="\e[0m"
 GREEN="\e[1;32m"
@@ -44,11 +43,11 @@ runhttpx() {
         httpx -silent -sc -cl -title -u "$DOMAIN" | tee "$outputfile"
         echo -e "${GREEN}FIRST SCAN COMPLETED & SAVED >> $outputfile${RESET}"
     fi
-    httpx -silent -sc -cl -title -u "$DOMAIN" > "$tmpoutput"
+    httpx -silent -sc -cl -title -u "$DOMAIN" > ".tmp-${outputfile}"
 }
 
 comparescans() {
-    diffoutput=$(cat "$tmpoutput" | anew "$outputfile")
+    diffoutput=$(cat ".tmp-${outputfile}" | anew "$outputfile")
     
     if [ -z "$diffoutput" ]; then
         echo -e "${YELLOW}NOTHING NEW FOUND ${RESET}"
