@@ -36,14 +36,15 @@ displayusage() {
 }
 
 runhttpx() {
+FLAGS="-silent -sc -cl -title"
     if [ -e "$outputfile" ]; then
         echo -e "${GREEN}STARTING SCAN...${RESET}"
     else
         echo -e "${RED}  CREATING : $outputfile${RESET}"
-        httpx -silent -sc -cl -title -u "$DOMAIN" | tee "$outputfile"
+        httpx "$FLAGS" -u "$DOMAIN" | tee "$outputfile"
         echo -e "${GREEN}FIRST SCAN COMPLETED & SAVED >> $outputfile${RESET}"
     fi
-    httpx -silent -sc -cl -title -u "$DOMAIN" > "$(dirname $outputfile)/.tmp-$(basename $outputfile)"
+    httpx "$FLAGS" -u "$DOMAIN" > "$(dirname $outputfile)/.tmp-$(basename $outputfile)"
 }
 
 comparescans() {
