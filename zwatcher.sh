@@ -118,17 +118,19 @@ while [[ $# -gt 0 ]]; do
             displaybanner
             displayusage
             exit 0
-            ;;
+        ;;
         \?)
-            echo -e "${RED}Invalid option: -$OPTARG${RESET}" >&2
-            displayusage
+            echo -e "\n${RED}Invalid option -$OPTARG${RESET}" >&2
             exit 1
-            ;;
+        ;;
         :)
-            echo -e "${RED}Option -$OPTARG requires an argument.${RESET}" >&2
-            displayusage
+            echo -e "\n${RED}Option -$OPTARG requires an argument!${RESET}" >&2
             exit 1
-            ;;
+        ;;
+        *)
+            echo -e "\n${RED}Flag provided but not defined: $1${RESET}" >&2
+            exit 1
+        ;;
     esac
     shift
 done
