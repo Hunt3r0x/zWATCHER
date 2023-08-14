@@ -48,16 +48,20 @@ runhttpx() {
 
 comparescans() {
     diffoutput=$(cat "$(dirname $outputfile)/.tmp-$(basename $outputfile)" | anew "$outputfile")
-    
     if [ -z "$diffoutput" ]; then
         echo -e "${YELLOW}NOTHING NEW FOUND ${RESET}"
         echo -e "${CYAN}SLEEPING FOR : $SLEEP_INTERVAL SECONDS${RESET}"
     else
         echo -e "${CYAN}NEW CHANGES FOUND...${RESET}"
-        echo -e "${RED}$PLUS${RESET}"
-        echo -e "${CYAN}$diffoutput${RESET}"
-        echo -e "${RED}$PLUS${RESET}"
-        echo -e "${CYAN}zwatcher found: $diffoutput${RESET}" | notify -id "$notifyid" > /dev/null 2>&1
+        echo -e "${GREEN}$PLUS${RESET}"
+        echo -e "$diffoutput"
+        echo -e "${GREEN}$PLUS${RESET}"
+        
+        if [ -n "$notifyid" ]; then
+            echo -e "${CYAN}zwatcher found: $diffoutput${RESET}" | notify -id "$notifyid" > /dev/null 2>&1
+        else
+            echo -e "${YELLOW}SKIPPING NOTIFICATION...${RESET}"
+        fi
         echo -e "${CYAN}SLEEPING FOR : $SLEEP_INTERVAL SECONDS${RESET}"
     fi
 }
