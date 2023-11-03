@@ -7,24 +7,25 @@ GREEN="\e[1;32m"
 RED="\e[1;31m"
 YELLOW="\e[1;33m"
 CYAN="\e[1;36m"
-PLUS="++++++++"
+PLUS="++++++++++"
 displaybanner() {
-    echo -e "${GREEN}"
+    echo -e "${RED}"
 cat << "BANNER"
-███████╗██╗    ██╗████████╗ ██████╗██╗  ██╗██████╗ 
+███████╗██╗    ██╗████████╗ ██████╗██╗  ██╗██████╗
 ╚══███╔╝██║    ██║╚══██╔══╝██╔════╝██║  ██║██╔══██╗
   ███╔╝ ██║ █╗ ██║   ██║   ██║     ███████║██████╔╝
  ███╔╝  ██║███╗██║   ██║   ██║     ██╔══██║██╔══██╗
 ███████╗╚███╔███╔╝   ██║   ╚██████╗██║  ██║██║  ██║
-╚══════╝ ╚══╝╚══╝    ╚═╝    ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ v1.4
+╚══════╝ ╚══╝╚══╝    ╚═╝    ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ v2.0
                        BY H1NTR0X01 @71ntr
-  Security is a myth. Hacking is not.
+  SECURITY is a myth. Hacking is not.
 BANNER
     echo -e "${RESET}"
 }
 
 displayusage() {
     echo -e "${CYAN}Usage: zwatcher.sh [OPTIONS]"
+    echo
     echo -e "Options:"
     echo -e "  -u <domain or URL>           Specify a single domain to scan"
     echo -e "  -l <list of domains>         Specify a file containing a list of domains to scan"
@@ -32,19 +33,26 @@ displayusage() {
     echo -e "  -n <notify-id>               Specify the notification ID"
     echo -e "  -o <output file>             Specify the output file to save scan results"
     echo -e "  -h                           Display this help message"
-    echo -e "\n${RED} ./zwatcher.sh -u example.com -s 60 -n notifyid -o scanresults.txt"
+    echo -e "httpx-flags"
+    echo -e "  -sc                          response status-code"
+    echo -e "  -cl                          response content-length"
+    echo -e "  -title                       http title"
+    echo -e "  you can add httpx flags in zwatcher"
+    echo -e "Example:"
+    echo -e "${RED}  ./zwatcher.sh -u x.com -s 60 -o out.txt -mc 200 -sc -title"
+    echo -e "${RED}  ./zwatcher.sh -u x.com -s 60 -o out.txt -mc 200 -sc -title -n notifyid"
+    echo -e "${RED}  ./zwatcher.sh -u x.com/script.js -s 60 -o out.txt -mc 200 -sc -title -n notifyid"
 }
 
 runhttpx() {
-FLAGS="-silent -sc -cl -title"
     if [ -e "$outputfile" ]; then
         echo -e "${GREEN}STARTING SCAN...${RESET}"
     else
         echo -e "${RED}  CREATING : $outputfile${RESET}"
-        httpx "$FLAGS" -u "$DOMAIN" | tee "$outputfile"
+        httpx -silent "${httpx_flags[@]}" -u "$DOMAIN" | tee "$outputfile"
         echo -e "${GREEN}FIRST SCAN COMPLETED & SAVED >> $outputfile${RESET}"
     fi
-    httpx "$FLAGS" -u "$DOMAIN" > "$(dirname $outputfile)/.tmp-$(basename $outputfile)"
+    httpx -silent "${httpx_flags[@]}" -u "$DOMAIN" > "$(dirname "$outputfile")/.tmp-$(basename "$outputfile")"
 }
 
 comparescans() {
@@ -70,7 +78,6 @@ comparescans() {
 scanfordomainslist() {
     while read -r domain; do
         DOMAIN="$domain"
-        # runhttpx
         while true; do
             runhttpx
             comparescans
@@ -93,7 +100,7 @@ while [[ $# -gt 0 ]]; do
         -l)
             LIST_FILE="$2"
             if [ ! -f "$LIST_FILE" ]; then
-                echo -e "${RED}File not found: $LIST_FILE${RESET}" >&2
+                echo -e "\n${RED}FILE NOT FOUND! : $LIST_FILE${RESET}" >&2
                 exit 1
             fi
             shift
@@ -103,56 +110,186 @@ while [[ $# -gt 0 ]]; do
         -o)
             outputfile="$2"
             if [ -z "$outputfile" ]; then
-                echo -e "${RED}Output file not specified.${RESET}" >&2
-                displayusage
+                echo -e "\n${RED}NO OUTPUT FILE SPECIFIED!${RESET}" >&2
                 exit 1
             fi
             outputfile_valid="true"
             if [ ! -w "$(dirname "$outputfile")" ]; then
-                echo -e "${RED}Cannot write to the specified output file path: $outputfile${RESET}" >&2
+                echo -e "\n${RED}FILE PATH IS WRONG : $outputfile${RESET}" >&2
                 exit 1
             fi
             shift
+            ;;
+        -sc) httpx_flags+=("-sc") ;;
+        -cl) httpx_flags+=("-cl") ;;
+        -title) httpx_flags+=("-title") ;;
+        -mc)
+            shift
+            mc_arg="$1"
+            httpx_flags+=("-mc" "$mc_arg")
+            ;;
+        -ml)
+            shift
+            ml_arg="$1"
+            httpx_flags+=("-ml" "$ml_arg")
+            ;;
+        -mlc)
+            shift
+            mlc_arg="$1"
+            httpx_flags+=("-mlc" "$mlc_arg")
+            ;;
+        -mwc)
+            shift
+            mwc_arg="$1"
+            httpx_flags+=("-mwc" "$mwc_arg")
+            ;;
+        -mfc)
+            shift
+            mfc_arg="$1"
+            httpx_flags+=("-mfc" "$mfc_arg")
+            ;;
+        -ms)
+            shift
+            ms_arg="$1"
+            httpx_flags+=("-ms" "$ms_arg")
+            ;;
+        -mr)
+            shift
+            mr_arg="$1"
+            httpx_flags+=("-mr" "$mr_arg")
+            ;;
+        -mcdn)
+            shift
+            mcdn_arg="$1"
+            httpx_flags+=("-mcdn" "$mcdn_arg")
+            ;;
+        -mrt)
+            shift
+            mrt_arg="$1"
+            httpx_flags+=("-mrt" "$mrt_arg")
+            ;;
+        -mdc)
+            shift
+            mdc_arg="$1"
+            httpx_flags+=("-mdc" "$mdc_arg")
+            ;;
+        -er)
+            shift
+            er_arg="$1"
+            httpx_flags+=("-er" "$er_arg")
+            ;;
+        -ep)
+            shift
+            ep_arg="$1"
+            httpx_flags+=("-ep" "$ep_arg")
+            ;;
+        -fc)
+            shift
+            fc_arg="$1"
+            httpx_flags+=("-fc" "$fc_arg")
+            ;;
+        -fep) httpx_flags+=("-fep") ;;
+        -fl)
+            shift
+            fl_arg="$1"
+            httpx_flags+=("-fl" "$fl_arg")
+            ;;
+        -flc)
+            shift
+            flc_arg="$1"
+            httpx_flags+=("-flc" "$flc_arg")
+            ;;
+        -fwc)
+            shift
+            fwc_arg="$1"
+            httpx_flags+=("-fwc" "$fwc_arg")
+            ;;
+        -ffc)
+            shift
+            ffc_arg="$1"
+            httpx_flags+=("-ffc" "$ffc_arg")
+            ;;
+        -fs)
+            shift
+            fs_arg="$1"
+            httpx_flags+=("-fs" "$fs_arg")
+            ;;
+        -fe)
+            shift
+            fe_arg="$1"
+            httpx_flags+=("-fe" "$fe_arg")
+            ;;
+        -fcdn)
+            shift
+            fcdn_arg="$1"
+            httpx_flags+=("-fcdn" "$fcdn_arg")
+            ;;
+        -frt)
+            shift
+            frt_arg="$1"
+            httpx_flags+=("-frt" "$frt_arg")
+            ;;
+        -fdc)
+            shift
+            fdc_arg="$1"
+            httpx_flags+=("-fdc" "$fdc_arg")
+            ;;
+        -strip) httpx_flags+=("-strip") ;;
+        -t)
+            shift
+            t_arg="$1"
+            httpx_flags+=("-t" "$t_arg")
+            ;;
+        -rl)
+            shift
+            rl_arg="$1"
+            httpx_flags+=("-rl" "$rl_arg")
+            ;;
+        -rlm)
+            shift
+            rlm_arg="$1"
+            httpx_flags+=("-rlm" "$rlm_arg")
             ;;
         -h)
             displaybanner
             displayusage
             exit 0
-        ;;
+            ;;
         \?)
-            echo -e "\n${RED}Invalid option -$OPTARG${RESET}" >&2
+            echo -e "\n${RED}INVALID OPTION -$OPTARG${RESET}" >&2
+            displayusage
             exit 1
-        ;;
+            ;;
         :)
-            echo -e "\n${RED}Option -$OPTARG requires an argument!${RESET}" >&2
+            echo -e "\n${RED}OPTION -$OPTARG REQUIRES AN ARGUMENT!${RESET}" >&2
+            displayusage
             exit 1
-        ;;
+            ;;
         *)
-            echo -e "\n${RED}Flag provided but not defined: $1${RESET}" >&2
+            echo -e "\n${RED}FLAG PROVIDED BUT NOT DEFINED: $1${RESET}" >&2
             exit 1
-        ;;
+            ;;
     esac
     shift
 done
 
-# if [ "$outputfile_valid" == "false" ]; then
-#     echo -e "${RED}Output file not specified.${RESET}" >&2
-#     displayusage
-#     exit 1
-# fi
-
 displaybanner
-
-# if [ "$outputfile_valid" = "false" ]; then
-#     echo -e "${RED}Missing or invalid output file path.${RESET}" >&2
-#     displayusage
-#     exit 1
-# fi
 
 if [ -n "$LIST_FILE" ]; then
     scanfordomainslist
 else
-    runhttpx
+    while true; do
+        runhttpx
+        comparescans
+        sleep "$SLEEP_INTERVAL"
+    done
+fi
+
+displaybanner
+
+if [ -n "$LIST_FILE" ]; then
+    scanfordomainslist
+else
     while true; do
         runhttpx
         comparescans
