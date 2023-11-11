@@ -65,7 +65,7 @@ comparescans() {
         echo -e "${GREEN}$PLUS${RESET}"
         echo -e "$diffoutput"
         echo -e "${GREEN}$PLUS${RESET}"
-        
+
         if [ -n "$notifyid" ]; then
             echo -e "${CYAN}zwatcher found: $diffoutput${RESET}" | notify -id "$notifyid" > /dev/null 2>&1
         else

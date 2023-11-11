@@ -80,7 +80,7 @@ The `notify` command can be installed using the following command:
 go install -v github.com/projectdiscovery/notify/cmd/notify@latest
 ```
 
-After installing `notify`, you can specify the notification ID using the `-n` flag:
+After installing `notify`, you can specify the notification ID "from notify config file" using the `-n` flag:
 
 ```bash
 ./zwatcher.sh -u example.com -s 60 -o scanresults.txt -n mynotifyid
