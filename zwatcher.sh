@@ -8,6 +8,7 @@ RED="\e[1;31m"
 YELLOW="\e[1;33m"
 CYAN="\e[1;36m"
 PLUS="++++++++++"
+
 displaybanner() {
     echo -e "${RED}"
 cat << "BANNER"
@@ -16,7 +17,7 @@ cat << "BANNER"
   ███╔╝ ██║ █╗ ██║   ██║   ██║     ███████║██████╔╝
  ███╔╝  ██║███╗██║   ██║   ██║     ██╔══██║██╔══██╗
 ███████╗╚███╔███╔╝   ██║   ╚██████╗██║  ██║██║  ██║
-╚══════╝ ╚══╝╚══╝    ╚═╝    ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ v2.0
+╚══════╝ ╚══╝╚══╝    ╚═╝    ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ v2.1
                        BY H1NTR0X01 @71ntr
   SECURITY is a myth. Hacking is not.
 BANNER
@@ -44,19 +45,43 @@ displayusage() {
     echo -e "${RED}  ./zwatcher.sh -u x.com/script.js -s 60 -o out.txt -mc 200 -sc -title -n notifyid"
 }
 
+check_dependencies() {
+    local missing=0
+    for cmd in httpx notify anew; do
+        if ! command -v "$cmd" &> /dev/null; then
+            echo -e "${RED}Error: $cmd is not installed or not in PATH.${RESET}"
+            missing=1
+        fi
+    done
+    if [ $missing -eq 1 ]; then
+        exit 1
+    fi
+}
+
 runhttpx() {
     if [ -e "$outputfile" ]; then
         echo -e "${GREEN}STARTING SCAN...${RESET}"
     else
         echo -e "${RED}  CREATING : $outputfile${RESET}"
-        httpx -silent "${httpx_flags[@]}" -u "$DOMAIN" | tee "$outputfile"
+        # Initial scan
+        if [ -n "$DOMAIN" ]; then
+             httpx -silent "${httpx_flags[@]}" -u "$DOMAIN" | tee "$outputfile"
+        elif [ -n "$LIST_FILE" ]; then
+             httpx -silent "${httpx_flags[@]}" -l "$LIST_FILE" | tee "$outputfile"
+        fi
         echo -e "${GREEN}FIRST SCAN COMPLETED & SAVED >> $outputfile${RESET}"
     fi
-    httpx -silent "${httpx_flags[@]}" -u "$DOMAIN" > "$(dirname "$outputfile")/.tmp-$(basename "$outputfile")"
+
+    # Subsequent scans to temp file
+    if [ -n "$DOMAIN" ]; then
+        httpx -silent "${httpx_flags[@]}" -u "$DOMAIN" > "$(dirname "$outputfile")/.tmp-$(basename "$outputfile")"
+    elif [ -n "$LIST_FILE" ]; then
+        httpx -silent "${httpx_flags[@]}" -l "$LIST_FILE" > "$(dirname "$outputfile")/.tmp-$(basename "$outputfile")"
+    fi
 }
 
 comparescans() {
-    diffoutput=$(cat "$(dirname $outputfile)/.tmp-$(basename $outputfile)" | anew "$outputfile")
+    diffoutput=$(cat "$(dirname "$outputfile")/.tmp-$(basename "$outputfile")" | anew "$outputfile")
     if [ -z "$diffoutput" ]; then
         echo -e "${YELLOW}NOTHING NEW FOUND ${RESET}"
         echo -e "${CYAN}SLEEPING FOR : $SLEEP_INTERVAL SECONDS${RESET}"
@@ -75,24 +100,13 @@ comparescans() {
     fi
 }
 
-scanfordomainslist() {
-    while read -r domain; do
-        DOMAIN="$domain"
-        while true; do
-            runhttpx
-            comparescans
-            sleep "$SLEEP_INTERVAL"
-        done
-    done <"$LIST_FILE"
-}
-
 if [ $# -eq 0 ]; then
     displaybanner
     displayusage
     exit 1
 fi
 
-outputfile_valid="false"
+check_dependencies
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -113,10 +127,14 @@ while [[ $# -gt 0 ]]; do
                 echo -e "\n${RED}NO OUTPUT FILE SPECIFIED!${RESET}" >&2
                 exit 1
             fi
-            outputfile_valid="true"
-            if [ ! -w "$(dirname "$outputfile")" ]; then
-                echo -e "\n${RED}FILE PATH IS WRONG : $outputfile${RESET}" >&2
-                exit 1
+            if [ ! -w "$(dirname "$outputfile")" ] && [ -e "$(dirname "$outputfile")" ]; then
+                 # Check if directory is writable only if it exists, otherwise we assume current dir or valid path
+                 # Actually, simpler check:
+                 touch "$outputfile" 2>/dev/null
+                 if [ $? -ne 0 ]; then
+                    echo -e "\n${RED}CANNOT WRITE TO FILE : $outputfile${RESET}" >&2
+                    exit 1
+                 fi
             fi
             shift
             ;;
@@ -275,24 +293,18 @@ done
 
 displaybanner
 
-if [ -n "$LIST_FILE" ]; then
-    scanfordomainslist
-else
-    while true; do
-        runhttpx
-        comparescans
-        sleep "$SLEEP_INTERVAL"
-    done
+if [ -z "$DOMAIN" ] && [ -z "$LIST_FILE" ]; then
+    echo -e "${RED}Error: You must specify either a domain (-u) or a list of domains (-l).${RESET}"
+    displayusage
+    exit 1
 fi
 
-displaybanner
-
-if [ -n "$LIST_FILE" ]; then
-    scanfordomainslist
-else
-    while true; do
-        runhttpx
-        comparescans
-        sleep "$SLEEP_INTERVAL"
-    done
+if [ -z "$SLEEP_INTERVAL" ]; then
+    SLEEP_INTERVAL=60 # Default to 60 seconds if not specified
 fi
+
+while true; do
+    runhttpx
+    comparescans
+    sleep "$SLEEP_INTERVAL"
+done
